@@ -1,55 +1,78 @@
-# Fine-Tuned Wazuh Sysmon Rules
+# Integrating Wazuh with Sysmon for Enhanced Security Monitoring
 
-This repository contains a **fine-tuned Wazuh rule file** (`0595-win-sysmon_rules.xml`) designed to enhance security monitoring and log collection for **Wazuh SIEM**. The ruleset is optimized to **reduce noise, capture high-value security events**, and improve threat detection efficiency.
+This guide provides step-by-step instructions for integrating **Sysmon** with **Wazuh** to improve Windows event monitoring and threat detection. It leverages the **SwiftOnSecurity Sysmon configuration** and a custom **Wazuh rule set** to efficiently capture and analyze security-relevant events.
 
-## 🔹 Features & Improvements
-- **Focused Event Detection**: Enhances Wazuh’s ability to detect and alert on important Sysmon events.
-- **Enhanced Detection**: Captures critical security events such as process creation, network connections, registry changes, and DNS queries (**Event ID 22**).
-- **Optimized for Wazuh**: Ensures better alerting and correlation with Wazuh’s built-in rules.
-- **Performance Considerations**: Minimizes excessive logging to prevent storage and processing overhead.
+## 📌 Prerequisites
+- **Wazuh Server** is already installed and running.
+- **Wazuh Agent** is installed on the Windows endpoint.
+- **Administrator access** on the Windows machine.
 
-## 📌 Key Detected Events
-- **Process Execution (Event ID 1)**
-- **File Creation (Event ID 11)**
-- **Registry Modifications (Event ID 13-14)**
-- **DNS Queries (Event ID 22)**
-- **Network Connections (Event ID 3)**
-- **Named Pipe Events (Event ID 17-19)**
-- **WMI Activity (Event ID 19-20)**
+## 🛠 Step 1: Install Sysmon with Recommended Configuration
+We will use the well-maintained **Sysmon configuration** from [SwiftOnSecurity](https://github.com/SwiftOnSecurity/sysmon-config/blob/master/sysmonconfig-export.xml) to ensure high-quality event filtering.
 
-## 📖 Installation & Usage
-1. **Backup** your existing Wazuh Sysmon rule file before making changes:
-   ```bash
-   sudo cp /var/ossec/ruleset/rules/0595-win-sysmon_rules.xml /var/ossec/ruleset/rules/0595-win-sysmon_rules.xml.bak
+1. **Download Sysmon & Configuration**:
+   ```powershell
+   Invoke-WebRequest -Uri https://download.sysinternals.com/files/Sysmon.zip -OutFile Sysmon.zip
+   Expand-Archive -Path Sysmon.zip -DestinationPath .
+   Invoke-WebRequest -Uri https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml -OutFile sysmonconfig.xml
    ```
-2. **Download and replace** the existing rule file with the updated version from this repository:
-   ```bash
-   sudo cp 0595-win-sysmon_rules.xml /var/ossec/ruleset/rules/
+2. **Install Sysmon with the Configuration**:
+   ```powershell
+   sysmon -accepteula -i sysmonconfig.xml
    ```
-3. **Restart Wazuh Manager** to apply the new rules:
-   ```bash
-   sudo systemctl restart wazuh-manager
+3. **Verify Sysmon Installation**:
+   ```powershell
+   sysmon -c
    ```
+   - Ensure Sysmon is running and collecting logs.
+   - Logs will appear in **Event Viewer** under:
+     ```
+     Applications and Services Logs → Microsoft → Windows → Sysmon → Operational
+     ```
 
-## 💡 Notes
-- This ruleset is **customizable**. You can modify or extend the event detection rules based on your security needs.
-- Ensure Wazuh is properly configured to collect **Sysmon logs** from:
-  ```
-  Microsoft-Windows-Sysmon/Operational
-  ```
-- Logs are stored in **Windows Event Viewer** under:
-  ```
-  Applications and Services Logs → Microsoft → Windows → Sysmon → Operational
-  ```
+## ⚙️ Step 2: Configure Wazuh Agent to Collect Sysmon Logs
+Now, we will configure the Wazuh agent to read **Sysmon logs** and apply the custom rules from this repository.
 
-## 📜 License
-This project is licensed under the **MIT License** – feel free to use and modify it as needed!
+1. **Edit the Wazuh Agent Configuration File**:
+   - Open the Wazuh agent config file (`ossec.conf`) located at:
+     ```
+     C:\Program Files (x86)\ossec-agent\ossec.conf
+     ```
+   - Add the following section inside `<localfile>` tags:
+     ```xml
+     <localfile>
+       <log_format>eventchannel</log_format>
+       <location>Microsoft-Windows-Sysmon/Operational</location>
+     </localfile>
+     ```
 
-## 🤝 Contributions
-Contributions are welcome! Feel free to submit **pull requests** or open an **issue** if you have suggestions or improvements.
+2. **Add Custom Wazuh Rules for Sysmon**:
+   - Copy the custom **Wazuh Sysmon rules** from this repository to the agent’s rules directory:
+     ```bash
+     sudo cp -r wazuh_sysmon_rules /var/ossec/ruleset/rules/
+     ```
 
-## 📧 Contact
-For any questions or discussions, reach out via GitHub issues.
+3. **Restart Wazuh Services**:
+   - Restart the Wazuh agent on Windows:
+     ```powershell
+     net stop wazuh-agent && net start wazuh-agent
+     ```
+   - Restart the Wazuh manager to apply new rules:
+     ```bash
+     sudo systemctl restart wazuh-manager
+     ```
+
+## 🛠 Step 3: Verify Integration
+1. Generate test events by opening **Event Viewer** and checking **Sysmon logs**.
+2. Check the Wazuh **alerts.log** file to ensure Sysmon events are processed:
+   ```bash
+   tail -f /var/ossec/logs/alerts/alerts.json | jq '.'
+   ```
+3. View alerts in **Wazuh Dashboard** under **Security Events**.
+
+## 📜 Credits
+- **Sysmon Configuration**: [SwiftOnSecurity](https://github.com/SwiftOnSecurity/sysmon-config/blob/master/sysmonconfig-export.xml)
+- **Wazuh Rules & Integration Guide**: This repository
 
 ---
-🚀 **Stay secure & happy monitoring!**
+🚀 **Now, your Wazuh and Sysmon setup is ready for advanced threat detection!**
