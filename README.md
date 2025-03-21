@@ -46,12 +46,10 @@ Now, we will configure the Wazuh agent to read **Sysmon logs** and apply the cus
      </localfile>
      ```
 
-2. **Add Custom Wazuh Rules for Sysmon**:
-   - Copy the custom **Wazuh Sysmon rules** from this repository to the agent’s rules directory:
-     ```bash
-     sudo cp -r wazuh_sysmon_rules /var/ossec/ruleset/rules/
-     ```
-
+2. **Add Fine-Tuned Wazuh-Sysmon Rules for Sysmon**:
+   - The wazuh has default rules for Sysmon. But for more data enrichments and visibility, 
+     you can use the **.xml** file from **wazuh_sysmon-rule folder**
+   
 3. **Restart Wazuh Services**:
    - Restart the Wazuh agent on Windows:
      ```powershell
