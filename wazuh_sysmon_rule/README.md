@@ -25,6 +25,7 @@ This repository contains a **fine-tuned Wazuh rule file** (`0595-win-sysmon_rule
    ```
 2. **Download and replace** the existing rule file with the updated version from this repository:
    ```bash
+   sudo wget https://github.com/JACKnygma/wazuh_sysmon/blob/main/wazuh_sysmon_rule/0595-win-sysmon_rules.xml
    sudo cp 0595-win-sysmon_rules.xml /var/ossec/ruleset/rules/
    ```
 3. **Restart Wazuh Manager** to apply the new rules:
