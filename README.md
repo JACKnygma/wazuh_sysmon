@@ -1,14 +1,14 @@
-# Fine-Tuned Sysmon Configuration for Wazuh
+# Fine-Tuned Wazuh Sysmon Rules
 
-This repository contains a **fine-tuned Sysmon configuration file** designed to enhance security monitoring and log collection for **Wazuh SIEM**. The configuration is optimized to **reduce noise, capture high-value security events**, and improve threat detection efficiency.
+This repository contains a **fine-tuned Wazuh rule file** (`0595-win-sysmon_rules.xml`) designed to enhance security monitoring and log collection for **Wazuh SIEM**. The ruleset is optimized to **reduce noise, capture high-value security events**, and improve threat detection efficiency.
 
 ## 🔹 Features & Improvements
-- **Focused Event Logging**: Includes essential Sysmon events while filtering out unnecessary noise.
+- **Focused Event Detection**: Enhances Wazuh’s ability to detect and alert on important Sysmon events.
 - **Enhanced Detection**: Captures critical security events such as process creation, network connections, registry changes, and DNS queries (**Event ID 22**).
-- **Optimized for Wazuh**: Ensures compatibility with Wazuh’s **Sysmon rule set** for better alerting and correlation.
+- **Optimized for Wazuh**: Ensures better alerting and correlation with Wazuh’s built-in rules.
 - **Performance Considerations**: Minimizes excessive logging to prevent storage and processing overhead.
 
-## 📌 Key Logged Events
+## 📌 Key Detected Events
 - **Process Execution (Event ID 1)**
 - **File Creation (Event ID 11)**
 - **Registry Modifications (Event ID 13-14)**
@@ -18,23 +18,25 @@ This repository contains a **fine-tuned Sysmon configuration file** designed to 
 - **WMI Activity (Event ID 19-20)**
 
 ## 📖 Installation & Usage
-1. **Download** the `sysmon.xml` file from this repository.
-2. **Deploy** it on your Windows system with Sysmon:
-   ```powershell
-   sysmon -c sysmon.xml
+1. **Backup** your existing Wazuh Sysmon rule file before making changes:
+   ```bash
+   sudo cp /var/ossec/ruleset/rules/0595-win-sysmon_rules.xml /var/ossec/ruleset/rules/0595-win-sysmon_rules.xml.bak
    ```
-3. Ensure Wazuh is configured to collect **Sysmon logs** from:
+2. **Download and replace** the existing rule file with the updated version from this repository:
+   ```bash
+   sudo cp 0595-win-sysmon_rules.xml /var/ossec/ruleset/rules/
    ```
-   Microsoft-Windows-Sysmon/Operational
-   ```
-4. **Restart Sysmon** to apply the new configuration:
-   ```powershell
-   net stop sysmon && net start sysmon
+3. **Restart Wazuh Manager** to apply the new rules:
+   ```bash
+   sudo systemctl restart wazuh-manager
    ```
 
 ## 💡 Notes
-- This configuration is **customizable**. You can modify or extend the event filtering rules based on your security needs.
-- If using with Wazuh, ensure the **Sysmon rules are enabled** in `sysmon_rules.xml`.
+- This ruleset is **customizable**. You can modify or extend the event detection rules based on your security needs.
+- Ensure Wazuh is properly configured to collect **Sysmon logs** from:
+  ```
+  Microsoft-Windows-Sysmon/Operational
+  ```
 - Logs are stored in **Windows Event Viewer** under:
   ```
   Applications and Services Logs → Microsoft → Windows → Sysmon → Operational
